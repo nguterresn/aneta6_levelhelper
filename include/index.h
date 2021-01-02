@@ -1,0 +1,144 @@
+#ifndef INDEX
+#define INDEX
+
+#include <Arduino.h>
+
+const char index_html[] PROGMEM = 
+R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  	<title>ANET LEVEL_INTERFACE HELPER</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" href="data:,">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+</head> 
+<style>
+	.border {
+		border-color: black;
+		border-style: solid;
+		border-width: thin;
+	}
+
+	.rectangle {
+		width: 100px;
+		height: 100px;
+	}
+</style>
+<body>
+	<div class="container">
+		<br>
+    	<div class="row">
+    		<h2 class="text-center">ANET A6 LEVEL_INTERFACE</h2>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col">
+				<span><b>Distance</b> (up to 1024)</span>
+			  </div>
+			<div class="col">
+				<span><b>Number of readings</b></span>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col">
+				<span id="distance">%DISTANCE%</span>
+			  </div>
+			<div class="col">
+				<input type="range" id="precision" min="1" max="2000" value="1000" step="99">
+			</div>
+		</div>
+		<!--<div class="row">
+			<div class="col">
+
+			</div>
+			<div class="col">
+				<span><small>A higher number of readings does not guarantee a better output value.</small></span>
+			</div>
+		</div>-->
+		<br>
+		<!-- Heres the draw -->
+		<div class="row border" style="position: relative; height: 400px; width: 100%;">
+			<button id="text_rec1" type="button" style="position: absolute; top: 0%; left:0%" class="btn btn-outline-primary rectangle">%MS1%</button>
+			<button id="text_rec2" type="button" style="position: absolute; bottom: 0%; left:0%" class="btn btn-outline-primary rectangle">%MS2%</button>
+			<button id="text_rec3" type="button" style="position: absolute; bottom: 0%; right:0%" class="btn btn-outline-primary rectangle">%MS3%</button>
+			<button id="text_rec4" type="button" style="position: absolute; top: 0%; right:0%" class="btn btn-outline-primary rectangle">%MS4%</button>
+			<button id="text_rec5" type="button" style="position: absolute; top: calc(50% - 50px); right: calc(50% - 50px);" class="btn btn-outline-primary rectangle">%MS5%</button>
+
+		</div>
+		<br>
+		<div class="row border" >
+			<div class="col">
+				<span><b>Console log:</b>  </span>
+			</div>
+			<div class="col">
+				<span id=text>%INFO%</span>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col">
+				<button id="reset" type="button" class="btn btn-secondary">Reset</button>
+			</div>
+		</div>
+  </div>
+</body>
+<script>
+	//VARIABLES
+	var numBtn = 0;
+	var distMeasured = 0;
+	var NUM_SPOT = 5;
+
+	var test;
+
+	//MEASURE
+	for (let index = 1; index <= NUM_SPOT; index++) {
+		document.getElementById("text_rec"+index).onclick = function() {
+			document.getElementById("text").innerHTML = "Loading...";
+			MeasureADC(index);
+		};
+	}
+	
+	//PRECISION
+	document.getElementById("precision").onchange = function() {
+		var precision = document.getElementById("precision").value;
+		ChangeADCPrecision(precision);
+	};	
+
+	//RESET
+    document.getElementById("reset").onclick = function() {
+        for (let index = 1; index <= NUM_SPOT; index++) {
+			document.getElementById("text_rec"+index).innerHTML = "%MS"+index+"%";
+		}
+		document.getElementById("text").innerHTML = "%INFO%";
+    };
+
+    function MeasureADC(i) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("text").innerHTML = "Success!";
+				document.getElementById("distance").innerHTML = this.responseText;
+				document.getElementById("text_rec"+i).innerHTML = this.responseText;
+            }
+        };
+        xhttp.open("GET", "/measure_level", true);
+        xhttp.send();
+	}
+	
+	function ChangeADCPrecision(prec) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("text").innerHTML = "Precision has changed to -> "+prec ;
+            }
+        };
+        xhttp.open("GET", "/change_adc?precision="+prec, true);
+        xhttp.send();
+    }
+
+</script>
+</html>
+)rawliteral";
+
+#endif
