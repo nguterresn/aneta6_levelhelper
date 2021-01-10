@@ -12,7 +12,7 @@ IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 const char* ssid = "Quarto Escuro";
-const char* password = "nunorei2019";
+const char* password = "#";
 
 String ConfigWifi() {
 
