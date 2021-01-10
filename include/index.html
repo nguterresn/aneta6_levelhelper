@@ -5,6 +5,7 @@
 	<link rel="icon" href="data:,">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head> 
 <style>
 	.border {
@@ -32,13 +33,19 @@
 			<div class="col">
 				<span><b>Number of readings</b></span>
 			</div>
+			<div class="col">
+				<span><b>Configuration</b></span>
+			</div>
 		</div>
 		<div class="row">
 			<div class="col">
 				<span id="distance">%DISTANCE%</span>
 			  </div>
 			<div class="col">
-				<input type="range" id="precision" min="1" max="2000" value="1000" step="99">
+				<input type="range" id="precision" min="1" max="2000" value="1000" step="100">
+			</div>
+			<div class="col">
+				<button id="config" type="button" class="btn btn-primary">Start</button>
 			</div>
 		</div>
 		<!--<div class="row">
@@ -98,6 +105,21 @@
 		ChangeADCPrecision(precision);
 	};	
 
+	//CONFIGURATION
+	document.getElementById("config").onclick = function() {
+		
+		Swal.fire({
+			title: 'Configuration time!',
+			text: "Set your TCRT5000 10mm from the surface bed and click OK to proceed.",
+			confirmButtonColor: '#3085d6',
+			confirmButtonText: 'OK'
+			}).then((result) => {
+			if (result.isConfirmed) {
+				SetDistanceValues();
+			}
+		})
+	};
+
 	//RESET
     document.getElementById("reset").onclick = function() {
         for (let index = 1; index <= NUM_SPOT; index++) {
@@ -128,7 +150,19 @@
         };
         xhttp.open("GET", "/change_adc?precision="+prec, true);
         xhttp.send();
-    }
+	}
+	
+	function SetDistanceValues() {
+		var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("text").innerHTML = "Configuration Success!";
+				document.getElementById("distance").innerHTML = this.responseText;
+            }
+        };
+        xhttp.open("GET", "/set_distance", true);
+        xhttp.send();
+	}
 
 </script>
 </html>

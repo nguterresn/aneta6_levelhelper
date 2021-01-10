@@ -6,6 +6,13 @@ AsyncWebServer server(80);
 //ADC takes about 500us per analogRead
 unsigned int adc_num = 1000;
 
+//Since IR depends on the "color" of the oppositw surface 
+//it is hard to create a function that displays a match between distance and digital values.
+/*double calc_dist (int param) {
+    double y = (0.000021)*param*param + 0.003349*param + 2.30578;
+    return y;
+}*/
+
 void notFound(AsyncWebServerRequest *request);
 
 void SetupServer() {
@@ -41,6 +48,13 @@ void SetupServer() {
 		avg = c / adc_num;
 
         request->send_P(200, "text/plain", String(avg).c_str());
+    });
+
+    server.on("/set_distance", HTTP_GET, [](AsyncWebServerRequest *request){
+       /* unsigned int adc_read = 0;
+        adc_read = analogRead(A0);
+        request->send_P(200, "text/plain", String(calc_dist(adc_read)).c_str());*/
+        request->send_P(200, "text/plain", String("not working").c_str());
     });
 
     server.on("/change_adc", HTTP_GET, [](AsyncWebServerRequest *request){
