@@ -2,82 +2,63 @@
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "index.h"
+#include "webServer.h"
 
-//ADC takes about 500us per analogRead
-unsigned int adc_num = 1000;
-
-unsigned int avg = 0;
-unsigned int c = 0;
-unsigned int adc_read = 0;
+#define ERROR -1
+#define SUCCESS 0
 
 IPAddress ip(192, 168, 0, 100); 
 IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
-AsyncWebServer server(80);
 
 const char* ssid = "Quarto Escuro";
-const char* password = "$%";
+const char* password = "nunorei2019";
 
-void notFound(AsyncWebServerRequest *request) {
-    request->send(404, "text/plain", "Not found");
+String ConfigWifi() {
+
+	int counter = 0;
+	WiFi.config(ip, gateway, subnet);
+	WiFi.begin(ssid, password);
+
+	while (WiFi.status() != WL_CONNECTED) {
+		delay(500);
+		Serial.print("..");
+
+		// Timeout
+		if (counter >= 10)
+			return (String) ERROR;
+		
+		counter++;
+	}
+
+	return WiFi.localIP().toString();
+
+}
+
+void SetupUART() {
+	Serial.begin(115200);
 }
 
 void setup() {
 
-	Serial.begin(115200);
+	String return_code;
+
+	//Setup UART. Since Serial.begin returns nothing, error is not checked.
+	SetupUART();
 	Serial.println("***** Starting Code ******"); 
+	Serial.print("Connecting to Wi-Fi -> ");
 
-	Serial.println("Connecting to Wi-Fi");
-	WiFi.config(ip, gateway, subnet);
-	WiFi.begin(ssid, password);
-	while (WiFi.status() != WL_CONNECTED) {
-		delay(500);
-		Serial.println("..");
-	}
-	Serial.println(WiFi.localIP());
+	//Setup & config Wifi
+	return_code = ConfigWifi();
+	if (return_code == (String) ERROR)
+		exit(1);
+	else 
+		Serial.println(return_code);
 
-	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/html", index_html);
-    });
-
-    server.on("/measure_level", HTTP_GET, [](AsyncWebServerRequest *request){
-
-		//Reset variables
-		c = 0, avg = 0, adc_read = 0;
-
-		//Measure ADC_NUM times the adc
-		for (size_t i = 0; i < adc_num; i++) {
-			adc_read = analogRead(A0);
-			delay(1);
-			Serial.println(adc_read);
-			c += adc_read;
-		}	
-
-		//Calculate avg
-		avg = c/adc_num;
-
-        request->send_P(200, "text/plain", String(avg).c_str());
-    });
-
-	server.on("/change_adc", HTTP_GET, [](AsyncWebServerRequest *request){
-		String received_precision;
-
-		if (request->hasParam("precision")) {
-			received_precision = request->getParam("precision")->value();
-			adc_num = received_precision.toInt();
-			request->send(200);
-		}
-
-	});
-
-    server.onNotFound(notFound);
-	server.begin();
-
+	//Setup WebServer at 192.168.0.100:80 
+	SetupServer();
 	Serial.println("server is up");
 
 }
 
-void loop() {
-
-}
+void loop() {}
